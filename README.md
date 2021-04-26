@@ -10,3 +10,6 @@ $ make build
 ```sh
 $ make render
 ```
+
+## Example
+![Diagram](diagram.png)
