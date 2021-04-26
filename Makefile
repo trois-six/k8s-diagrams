@@ -6,6 +6,7 @@ VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 DOCKER_REGISTRY := gcr.io
 DOCKER_REPOSITORY := trois-six/k8s-diagrams
+OUTPUT_DIR := diagrams
 
 default: clean build render
 
@@ -13,7 +14,7 @@ check:
 	@golangci-lint run
 
 clean:
-	@rm -rf go-diagrams
+	@rm -rf $(OUTPUT_DIR)
 
 build: clean
 	@echo Version: $(VERSION) $(BUILD_DATE)
@@ -30,8 +31,8 @@ publish-latest:
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY):latest
 
 render: clean
-	@./k8s-diagrams diagram
-	@cd go-diagrams && dot -Tpng k8s.dot > diagram.png
+	@./k8s-diagrams -n traefikee
+	@cd $(OUTPUT_DIR) && dot -Tpng k8s.dot > ../diagram.png
 
 test: clean
 	go test -v -cover ./...

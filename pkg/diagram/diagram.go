@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	NSFontSize = 8
+	nodeFontSize  = 8
+	groupFontSize = 10
 )
 
 type Diagram struct {
@@ -32,6 +33,9 @@ func NewDiagram(outputDir, filename, label string) (*Diagram, error) {
 		diagram.Filename(filename),
 		diagram.Label(label),
 		diagram.Direction("TB"),
+		func(options *diagram.Options) {
+			options.Name = outputDir
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("creating diagram: %w", err)
@@ -59,13 +63,18 @@ func (d *Diagram) GenerateDiagram(namespace string, o *discovery.Objects) {
 			continue
 		}
 
-		d.namespaces[ns.Name] = k8s.Group.Ns(diagram.NodeLabel(ns.Name))
+		d.namespaces[ns.Name] = k8s.Group.Ns(
+			diagram.NodeLabel(ns.Name),
+			diagram.Width(0.8),
+			diagram.Height(0.8),
+			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
+		)
+
 		d.namespaceGroups[ns.Name] = diagram.NewGroup(ns.Name, func(o *diagram.GroupOptions) {
 			o.Font = diagram.Font{
-				Name:  "Sans-Serif",
-				Size:  NSFontSize,
-				Color: "#2D3436",
+				Size: groupFontSize,
 			}
+			o.BackgroundColor = "#E0ECF4"
 		}).Label(ns.Name)
 		d.namespaceGroups[ns.Name].Add(d.namespaces[ns.Name])
 		d.diag.Group(d.namespaceGroups[ns.Name])

@@ -24,5 +24,5 @@
 
 [issues]
   [[issues.exclude-rules]]
-    path = "diagram.go"
-    text = "lines are duplicate of `diagram.go"
+    path = "objects.go"
+    text = "lines are duplicate of `objects.go"

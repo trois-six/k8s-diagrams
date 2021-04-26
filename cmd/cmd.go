@@ -38,7 +38,7 @@ func Run(cliContext *cli.Context) error {
 		return fmt.Errorf("can't read kubeconfig: %w", err)
 	}
 
-	ns := "default"
+	ns := cliContext.String("namespace")
 
 	config, err := clientcmd.BuildConfigFromFlags("", kc)
 	if err != nil {
@@ -57,7 +57,11 @@ func Run(cliContext *cli.Context) error {
 		log.Fatal(err)
 	}
 
-	d, err := diagram.NewDiagram("go-diagrams", "k8s", "Kubernetes")
+	d, err := diagram.NewDiagram(
+		cliContext.String("outputDirectory"),
+		cliContext.String("outputFilename"),
+		cliContext.String("label"),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

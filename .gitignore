@@ -10,5 +10,5 @@ vendor/
 .now
 .env
 .env.build
-go-diagrams
+diagrams
 k8s-diagrams
