@@ -3,7 +3,6 @@ package discovery
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -49,32 +48,39 @@ func NewDiscovery(ctx context.Context, config *rest.Config) (Discovery, error) {
 	}, err
 }
 
-func (k *Discovery) generateSecrets(namespace string) error {
-	secrets, err := k.client.CoreV1().Secrets(namespace).List(k.ctx, metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("getting secrets: %w", err)
-	}
+// func (k *Discovery) generateSecrets(namespace string) error {
+// 	secrets, err := k.client.CoreV1().Secrets(namespace).List(k.ctx, metav1.ListOptions{})
+// 	if err != nil {
+// 		return fmt.Errorf("getting secrets: %w", err)
+// 	}
 
-	filteredSecrets := &corev1.SecretList{}
+// 	filteredSecrets := &corev1.SecretList{}
 
-	for _, secret := range secrets.Items {
-		if !strings.HasPrefix(secret.ObjectMeta.Name, "sh.helm.release") {
-			if secret.ObjectMeta.Annotations["kubectl.kubernetes.io/last-applied-configuration"] != "" {
-				delete(secret.ObjectMeta.Annotations, "kubectl.kubernetes.io/last-applied-configuration")
-			}
+// 	for _, secret := range secrets.Items {
+// 		if !strings.HasPrefix(secret.ObjectMeta.Name, "sh.helm.release") {
+// 			if secret.ObjectMeta.Annotations["kubectl.kubernetes.io/last-applied-configuration"] != "" {
+// 				delete(secret.ObjectMeta.Annotations, "kubectl.kubernetes.io/last-applied-configuration")
+// 			}
 
-			secret.Data = make(map[string][]byte)
+// 			secret.Data = make(map[string][]byte)
 
-			filteredSecrets.Items = append(filteredSecrets.Items, secret)
-		}
-	}
+// 			filteredSecrets.Items = append(filteredSecrets.Items, secret)
+// 		}
+// 	}
 
-	k.objects.Secrets = filteredSecrets
+// 	k.objects.Secrets = filteredSecrets
 
-	return nil
-}
+// 	return nil
+// }
 
 func (k *Discovery) generateCore(namespace string) error {
+	ns, err := k.client.CoreV1().Namespaces().List(k.ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("getting namespaces: %w", err)
+	}
+
+	k.objects.Namespaces = ns
+
 	// cm, err := k.client.CoreV1().ConfigMaps(namespace).List(k.ctx, metav1.ListOptions{})
 	// if err != nil {
 	// 	return fmt.Errorf("getting configmaps: %w", err)
@@ -88,13 +94,6 @@ func (k *Discovery) generateCore(namespace string) error {
 	// }
 
 	// k.objects.Endpoints = ep
-
-	ns, err := k.client.CoreV1().Namespaces().List(k.ctx, metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("getting namespaces: %w", err)
-	}
-
-	k.objects.Namespaces = ns
 
 	po, err := k.client.CoreV1().Pods(namespace).List(k.ctx, metav1.ListOptions{})
 	if err != nil {
@@ -163,16 +162,16 @@ func (k *Discovery) generateApps(namespace string) error {
 	return nil
 }
 
-func (k *Discovery) generateNetworking(namespace string) error {
-	ing, err := k.client.NetworkingV1().Ingresses(namespace).List(k.ctx, metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("getting ingresses: %w", err)
-	}
+// func (k *Discovery) generateNetworking(namespace string) error {
+// 	ing, err := k.client.NetworkingV1().Ingresses(namespace).List(k.ctx, metav1.ListOptions{})
+// 	if err != nil {
+// 		return fmt.Errorf("getting ingresses: %w", err)
+// 	}
 
-	k.objects.Ingresses = ing
+// 	k.objects.Ingresses = ing
 
-	return nil
-}
+// 	return nil
+// }
 
 // GenerateAll gets all kubernetes objects.
 func (k *Discovery) GenerateAll(namespace string) (*Objects, error) {

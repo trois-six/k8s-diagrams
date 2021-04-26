@@ -17,7 +17,10 @@
 [linters]
   enable-all = true
   disable = [
+    "interfacer",
     "exhaustivestruct",
+    "maligned",
+    "scopelint",
     "tparallel",
     "paralleltest",
   ]
@@ -25,4 +28,4 @@
 [issues]
   [[issues.exclude-rules]]
     path = "objects.go"
-    text = "lines are duplicate of `objects.go"
+    text = "lines are duplicate of"
