@@ -33,6 +33,7 @@ publish-latest:
 render: clean
 	@./k8s-diagrams -n traefikee
 	@cd $(OUTPUT_DIR) && dot -Tpng k8s.dot > ../diagram.png
+	@feh diagram.png
 
 test: clean
 	go test -v -cover ./...
