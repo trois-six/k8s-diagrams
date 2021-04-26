@@ -1,0 +1,37 @@
+.PHONY: check clean build image publish publish-latest render test
+
+TAG_NAME := $(shell git tag -l --contains HEAD)
+SHA := $(shell git rev-parse --short HEAD)
+VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
+BUILD_DATE := $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
+DOCKER_REGISTRY := gcr.io
+DOCKER_REPOSITORY := trois-six/k8s-diagrams
+
+default: clean build render
+
+check:
+	@golangci-lint run
+
+clean:
+	@rm -rf go-diagrams
+
+build: clean
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	CGO_ENABLED=0 go build -v -ldflags '-X "main.version=${VERSION}" -X "main.commit=${SHA}" -X "main.date=${BUILD_DATE}"'
+
+image:
+	docker build -t $(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY):$(VERSION) .
+
+publish:
+	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY):$(VERSION)
+
+publish-latest:
+	docker tag $(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY):$(VERSION) $(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY):latest
+	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY):latest
+
+render: clean
+	@./k8s-diagrams diagram
+	@cd go-diagrams && dot -Tpng k8s.dot > diagram.png
+
+test: clean
+	go test -v -cover ./...
