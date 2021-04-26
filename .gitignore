@@ -1,0 +1,14 @@
+.idea/
+.intellij/
+*.iml
+.vscode/
+.DS_Store
+*.log
+*.exe
+cover.out
+vendor/
+.now
+.env
+.env.build
+go-diagrams
+k8s-diagrams
