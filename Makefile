@@ -1,4 +1,4 @@
-.PHONY: check clean build image publish publish-latest render test
+.PHONY: check clean build image publish publish-latest render display test
 
 TAG_NAME := $(shell git tag -l --contains HEAD)
 SHA := $(shell git rev-parse --short HEAD)
@@ -8,6 +8,7 @@ DOCKER_REGISTRY := gcr.io
 DOCKER_REPOSITORY := trois-six/k8s-diagrams
 OUTPUT_DIR ?= diagrams
 NAMESPACE ?= traefikee
+VIEWER ?= feh
 
 default: clean build render
 
@@ -35,8 +36,8 @@ render: clean
 	@./k8s-diagrams -n $(NAMESPACE) -d $(OUTPUT_DIR)
 	@cd $(OUTPUT_DIR) && dot -Tpng k8s.dot > ../diagram.png
 
-display:
-	@feh diagram.png
+display: default
+	@$(VIEWER) diagram.png
 
 test: clean
 	go test -v -cover ./...
