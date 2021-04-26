@@ -8,6 +8,10 @@ import (
 	"github.com/blushft/go-diagrams/nodes/k8s"
 )
 
+const (
+	NSFontSize = 8
+)
+
 type Diagram struct {
 	filename          string
 	outputDir         string
@@ -59,7 +63,7 @@ func (d *Diagram) GenerateDiagram(namespace string, o *discovery.Objects) {
 		d.namespaceGroups[ns.Name] = diagram.NewGroup(ns.Name, func(o *diagram.GroupOptions) {
 			o.Font = diagram.Font{
 				Name:  "Sans-Serif",
-				Size:  nodeFontSize,
+				Size:  NSFontSize,
 				Color: "#2D3436",
 			}
 		}).Label(ns.Name)

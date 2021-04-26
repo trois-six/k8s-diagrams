@@ -93,15 +93,8 @@ func (d *Diagram) GenerateStatefulSets(namespace string, o *appsv1.StatefulSetLi
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
 		)
 		d.statefulSetGroups[v.Name] = diagram.NewGroup(v.Name).Label("sts")
-		d.namespaceGroups[namespace].Add(d.statefulSets[v.Name]).Group(d.statefulSetGroups[v.Name])
-
-		for _, o := range v.GetOwnerReferences() {
-			if strings.ToLower(o.Kind) != kindDeployment {
-				continue
-			}
-
-			d.namespaceGroups[namespace].Connect(d.deployments[o.Name], d.statefulSets[v.Name])
-		}
+		d.namespaceGroups[namespace].Group(d.statefulSetGroups[v.Name])
+		d.namespaceGroups[namespace].Add(d.statefulSets[v.Name]).Connect(d.namespaces[namespace], d.statefulSets[v.Name])
 	}
 }
 

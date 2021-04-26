@@ -8,5 +8,5 @@ $ make build
 
 ## Usage
 ```sh
-$ #TODO
+$ make render
 ```
