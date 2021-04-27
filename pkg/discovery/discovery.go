@@ -162,16 +162,16 @@ func (k *Discovery) generateApps(namespace string) error {
 	return nil
 }
 
-// func (k *Discovery) generateNetworking(namespace string) error {
-// 	ing, err := k.client.NetworkingV1().Ingresses(namespace).List(k.ctx, metav1.ListOptions{})
-// 	if err != nil {
-// 		return fmt.Errorf("getting ingresses: %w", err)
-// 	}
+func (k *Discovery) generateNetworking(namespace string) error {
+	ing, err := k.client.NetworkingV1().Ingresses(namespace).List(k.ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("getting ingresses: %w", err)
+	}
 
-// 	k.objects.Ingresses = ing
+	k.objects.Ingresses = ing
 
-// 	return nil
-// }
+	return nil
+}
 
 // GenerateAll gets all kubernetes objects.
 func (k *Discovery) GenerateAll(namespace string) (*Objects, error) {
@@ -183,9 +183,9 @@ func (k *Discovery) GenerateAll(namespace string) (*Objects, error) {
 		return nil, err
 	}
 
-	// if err := k.generateNetworking(namespace); err != nil {
-	// 	return nil, err
-	// }
+	if err := k.generateNetworking(namespace); err != nil {
+		return nil, err
+	}
 
 	return k.objects, nil
 }
