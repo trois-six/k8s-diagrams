@@ -21,6 +21,8 @@ type Diagram struct {
 	daemonSetGroups   map[string]*diagram.Group
 	deployments       map[string]*diagram.Node
 	endpoints         map[string]*diagram.Node
+	ingresses         map[string]*diagram.Node
+	internet          *diagram.Node
 	pods              map[string]*diagram.Node
 	replicaSets       map[string]*diagram.Node
 	replicaSetGroups  map[string]*diagram.Group
@@ -38,6 +40,7 @@ func NewDiagram(outputDir, filename, label string) (*Diagram, error) {
 		func(options *diagram.Options) {
 			options.Name = outputDir
 			options.Attributes["nodesep"] = "1"
+			options.Attributes["splines"] = "curved"
 		},
 	)
 	if err != nil {
@@ -50,8 +53,9 @@ func NewDiagram(outputDir, filename, label string) (*Diagram, error) {
 		namespaceGroups:   make(map[string]*diagram.Group),
 		daemonSets:        make(map[string]*diagram.Node),
 		daemonSetGroups:   make(map[string]*diagram.Group),
-		endpoints:         make(map[string]*diagram.Node),
 		deployments:       make(map[string]*diagram.Node),
+		endpoints:         make(map[string]*diagram.Node),
+		ingresses:         make(map[string]*diagram.Node),
 		pods:              make(map[string]*diagram.Node),
 		replicaSets:       make(map[string]*diagram.Node),
 		replicaSetGroups:  make(map[string]*diagram.Group),
@@ -82,6 +86,7 @@ func (d *Diagram) GenerateDiagram(namespace string, o *discovery.Objects) {
 		d.GenerateStatefulSets(namespace, o.StatefulSets)
 		d.GeneratePods(namespace, o.Pods)
 		d.GenerateServices(namespace, o.Services, o.Endpoints)
+		d.GenerateIngresses(namespace, o.Ingresses)
 	}
 }
 

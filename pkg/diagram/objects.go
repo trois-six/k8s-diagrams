@@ -1,12 +1,15 @@
 package diagram
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/blushft/go-diagrams/diagram"
+	"github.com/blushft/go-diagrams/nodes/apps"
 	"github.com/blushft/go-diagrams/nodes/k8s"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 )
 
 const (
@@ -139,7 +142,7 @@ func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 	}
 }
 
-func (d *Diagram) GenerateServicePodsLinks(namespace string, service string, endpoints *corev1.EndpointsList) {
+func (d *Diagram) GenerateLinksFromServiceToPods(namespace string, service string, endpoints *corev1.EndpointsList) {
 	for _, ep := range endpoints.Items {
 		if ep.Namespace != namespace {
 			continue
@@ -178,17 +181,87 @@ func (d *Diagram) GenerateServices(namespace string, services *corev1.ServiceLis
 		)
 		d.namespaceGroups[namespace].Add(d.services[svc.Name])
 
-		d.GenerateServicePodsLinks(namespace, svc.Name, endpoints)
+		d.GenerateLinksFromServiceToPods(namespace, svc.Name, endpoints)
 
-		// for _, lb := range svc.Status.LoadBalancer.Ingress {
-		// 	var publicIPName string
-		// 	if lb.IP != "" {
-		// 		publicIPName = lb.IP
-		// 	} else if lb.Hostname != "" {
-		// 		publicIPName = lb.Hostname
-		// 	}
+		for _, lb := range svc.Status.LoadBalancer.Ingress {
+			if d.internet == nil {
+				d.internet = apps.Network.Internet(diagram.NodeLabel("Internet"))
+			}
 
-		// 	fmt.Printf("svc: %s, public access: %#v\n", svc.Name, publicIPName)
-		// }
+			if lb.IP != "" {
+				d.diag.Connect(
+					d.internet,
+					d.services[svc.Name],
+					func(o *diagram.EdgeOptions) {
+						o.Attributes["xlabel"] = lb.IP
+						o.Attributes["labelfloat"] = strconv.FormatBool(true)
+						o.Font.Size = 6
+					},
+				)
+			} else if lb.Hostname != "" {
+				d.diag.Connect(
+					d.internet,
+					d.services[svc.Name],
+					func(o *diagram.EdgeOptions) {
+						o.Attributes["xlabel"] = lb.Hostname
+						o.Attributes["labelfloat"] = strconv.FormatBool(true)
+						o.Font.Size = 6
+					},
+				)
+			}
+		}
+	}
+}
+
+func (d *Diagram) GenerateIngresses(namespace string, o *networkingv1.IngressList) {
+	for _, ing := range o.Items {
+		if ing.Namespace != namespace {
+			continue
+		}
+
+		d.ingresses[ing.Name] = k8s.Network.Ing(
+			diagram.NodeLabel(ing.Name),
+			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
+			diagram.Width(nodeWidth),
+		)
+		d.namespaceGroups[namespace].Add(d.ingresses[ing.Name])
+
+		for _, rule := range ing.Spec.Rules {
+			if rule.HTTP.Paths == nil {
+				continue
+			}
+
+			for _, path := range rule.HTTP.Paths {
+				d.namespaceGroups[namespace].Connect(d.ingresses[ing.Name], d.services[path.Backend.Service.Name])
+			}
+		}
+
+		for _, lb := range ing.Status.LoadBalancer.Ingress {
+			if d.internet == nil {
+				d.internet = apps.Network.Internet(diagram.NodeLabel("Internet"))
+			}
+
+			if lb.IP != "" {
+				d.diag.Connect(
+					d.internet,
+					d.ingresses[ing.Name],
+					func(o *diagram.EdgeOptions) {
+						o.Attributes["xlabel"] = lb.IP
+						o.Attributes["labelfloat"] = strconv.FormatBool(true)
+						o.Font.Size = 6
+					},
+				)
+			} else if lb.Hostname != "" {
+				d.diag.Connect(
+					d.internet,
+					d.ingresses[ing.Name],
+					func(o *diagram.EdgeOptions) {
+						o.Attributes["xlabel"] = lb.Hostname
+						o.Attributes["labelfloat"] = strconv.FormatBool(true)
+						o.Font.Size = 6
+					},
+				)
+			}
+		}
 	}
 }
