@@ -23,6 +23,7 @@ func (d *Diagram) GenerateDeployments(namespace string, o *appsv1.DeploymentList
 		d.deployments[v.Name] = k8s.Compute.Deploy(
 			diagram.NodeLabel(v.Name),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
+			diagram.Width(nodeWidth),
 		)
 		d.namespaceGroups[namespace].Add(d.deployments[v.Name]).Connect(d.namespaces[namespace], d.deployments[v.Name])
 	}
@@ -37,6 +38,7 @@ func (d *Diagram) GenerateDaemonSets(namespace string, o *appsv1.DaemonSetList) 
 		d.daemonSets[v.Name] = k8s.Compute.Ds(
 			diagram.NodeLabel(v.Name),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
+			diagram.Width(nodeWidth),
 		)
 		d.daemonSetGroups[v.Name] = diagram.NewGroup(v.Name, func(o *diagram.GroupOptions) {
 			o.Font = diagram.Font{
@@ -58,6 +60,7 @@ func (d *Diagram) GenerateReplicaSets(namespace string, o *appsv1.ReplicaSetList
 		d.replicaSets[v.Name] = k8s.Compute.Rs(
 			diagram.NodeLabel(v.Name),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
+			diagram.Width(nodeWidth),
 		)
 		d.replicaSetGroups[v.Name] = diagram.NewGroup(v.Name, func(o *diagram.GroupOptions) {
 			o.Font = diagram.Font{
@@ -73,6 +76,7 @@ func (d *Diagram) GenerateReplicaSets(namespace string, o *appsv1.ReplicaSetList
 			}
 
 			d.namespaceGroups[namespace].Connect(d.deployments[o.Name], d.replicaSets[v.Name])
+			d.replicaSets[v.Name].Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 		}
 	}
 }
@@ -86,6 +90,7 @@ func (d *Diagram) GenerateStatefulSets(namespace string, o *appsv1.StatefulSetLi
 		d.statefulSets[v.Name] = k8s.Compute.Sts(
 			diagram.NodeLabel(v.Name),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
+			diagram.Width(nodeWidth),
 		)
 		d.statefulSetGroups[v.Name] = diagram.NewGroup(v.Name, func(o *diagram.GroupOptions) {
 			o.Font = diagram.Font{
@@ -107,6 +112,7 @@ func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 		pod := k8s.Compute.Pod(
 			diagram.NodeLabel(v.Name),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
+			diagram.Width(nodeWidth),
 		)
 
 		if len(v.GetOwnerReferences()) > 0 {
@@ -115,12 +121,15 @@ func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 				case "daemonset":
 					d.daemonSetGroups[o.Name].Add(pod)
 					d.namespaceGroups[namespace].Connect(d.daemonSets[o.Name], pod)
+					pod.Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 				case "replicaset":
 					d.replicaSetGroups[o.Name].Add(pod)
 					d.namespaceGroups[namespace].Connect(d.replicaSets[o.Name], pod)
+					pod.Label(d.replicaSets[o.Name].Options.Label + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 				case "statefulset":
 					d.statefulSetGroups[o.Name].Add(pod)
 					d.namespaceGroups[namespace].Connect(d.statefulSets[o.Name], pod)
+					pod.Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 				default:
 				}
 			}
