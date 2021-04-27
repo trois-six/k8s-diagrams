@@ -22,8 +22,6 @@ func (d *Diagram) GenerateDeployments(namespace string, o *appsv1.DeploymentList
 
 		d.deployments[v.Name] = k8s.Compute.Deploy(
 			diagram.NodeLabel(v.Name),
-			diagram.Width(nodeIconWidth),
-			diagram.Height(nodeIconHeight),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
 		)
 		d.namespaceGroups[namespace].Add(d.deployments[v.Name]).Connect(d.namespaces[namespace], d.deployments[v.Name])
@@ -38,8 +36,6 @@ func (d *Diagram) GenerateDaemonSets(namespace string, o *appsv1.DaemonSetList) 
 
 		d.daemonSets[v.Name] = k8s.Compute.Ds(
 			diagram.NodeLabel(v.Name),
-			diagram.Width(nodeIconWidth),
-			diagram.Height(nodeIconHeight),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
 		)
 		d.daemonSetGroups[v.Name] = diagram.NewGroup(v.Name, func(o *diagram.GroupOptions) {
@@ -61,8 +57,6 @@ func (d *Diagram) GenerateReplicaSets(namespace string, o *appsv1.ReplicaSetList
 
 		d.replicaSets[v.Name] = k8s.Compute.Rs(
 			diagram.NodeLabel(v.Name),
-			diagram.Width(nodeIconWidth),
-			diagram.Height(nodeIconHeight),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
 		)
 		d.replicaSetGroups[v.Name] = diagram.NewGroup(v.Name, func(o *diagram.GroupOptions) {
@@ -91,8 +85,6 @@ func (d *Diagram) GenerateStatefulSets(namespace string, o *appsv1.StatefulSetLi
 
 		d.statefulSets[v.Name] = k8s.Compute.Sts(
 			diagram.NodeLabel(v.Name),
-			diagram.Width(nodeIconWidth),
-			diagram.Height(nodeIconHeight),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
 		)
 		d.statefulSetGroups[v.Name] = diagram.NewGroup(v.Name, func(o *diagram.GroupOptions) {
@@ -114,8 +106,6 @@ func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 
 		pod := k8s.Compute.Pod(
 			diagram.NodeLabel(v.Name),
-			diagram.Width(nodeIconWidth),
-			diagram.Height(nodeIconHeight),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
 		)
 
