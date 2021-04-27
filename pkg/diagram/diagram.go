@@ -9,10 +9,8 @@ import (
 )
 
 const (
-	nodeFontSize   = 8
-	nodeIconWidth  = 0.8
-	nodeIconHeight = 0.8
-	groupFontSize  = 10
+	nodeFontSize  = 8
+	groupFontSize = 10
 )
 
 type Diagram struct {
@@ -67,8 +65,6 @@ func (d *Diagram) GenerateDiagram(namespace string, o *discovery.Objects) {
 
 		d.namespaces[ns.Name] = k8s.Group.Ns(
 			diagram.NodeLabel(ns.Name),
-			diagram.Width(nodeIconWidth),
-			diagram.Height(nodeIconHeight),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
 		)
 
