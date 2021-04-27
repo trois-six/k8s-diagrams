@@ -5,7 +5,6 @@ import (
 
 	"github.com/Trois-Six/k8s-diagrams/pkg/discovery"
 	"github.com/blushft/go-diagrams/diagram"
-	"github.com/blushft/go-diagrams/nodes/k8s"
 )
 
 const (
@@ -17,13 +16,15 @@ const (
 type Diagram struct {
 	filename          string
 	outputDir         string
-	namespaces        map[string]*diagram.Node
 	namespaceGroups   map[string]*diagram.Group
 	daemonSets        map[string]*diagram.Node
 	daemonSetGroups   map[string]*diagram.Group
 	deployments       map[string]*diagram.Node
+	endpoints         map[string]*diagram.Node
+	pods              map[string]*diagram.Node
 	replicaSets       map[string]*diagram.Node
 	replicaSetGroups  map[string]*diagram.Group
+	services          map[string]*diagram.Node
 	statefulSets      map[string]*diagram.Node
 	statefulSetGroups map[string]*diagram.Group
 	diag              *diagram.Diagram
@@ -46,13 +47,15 @@ func NewDiagram(outputDir, filename, label string) (*Diagram, error) {
 	return &Diagram{
 		filename:          filename,
 		outputDir:         outputDir,
-		namespaces:        make(map[string]*diagram.Node),
 		namespaceGroups:   make(map[string]*diagram.Group),
 		daemonSets:        make(map[string]*diagram.Node),
 		daemonSetGroups:   make(map[string]*diagram.Group),
+		endpoints:         make(map[string]*diagram.Node),
 		deployments:       make(map[string]*diagram.Node),
+		pods:              make(map[string]*diagram.Node),
 		replicaSets:       make(map[string]*diagram.Node),
 		replicaSetGroups:  make(map[string]*diagram.Group),
+		services:          make(map[string]*diagram.Node),
 		statefulSets:      make(map[string]*diagram.Node),
 		statefulSetGroups: make(map[string]*diagram.Group),
 		diag:              d,
@@ -65,19 +68,12 @@ func (d *Diagram) GenerateDiagram(namespace string, o *discovery.Objects) {
 			continue
 		}
 
-		d.namespaces[ns.Name] = k8s.Group.Ns(
-			diagram.NodeLabel(ns.Name),
-			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
-			diagram.Width(nodeWidth),
-		)
-
 		d.namespaceGroups[ns.Name] = diagram.NewGroup(ns.Name, func(o *diagram.GroupOptions) {
 			o.Font = diagram.Font{
 				Size: groupFontSize,
 			}
 			o.BackgroundColor = "#E0ECF4"
 		}).Label(ns.Name)
-		d.namespaceGroups[ns.Name].Add(d.namespaces[ns.Name])
 		d.diag.Group(d.namespaceGroups[ns.Name])
 
 		d.GenerateDeployments(namespace, o.Deployments)
@@ -85,6 +81,7 @@ func (d *Diagram) GenerateDiagram(namespace string, o *discovery.Objects) {
 		d.GenerateReplicaSets(namespace, o.ReplicaSets)
 		d.GenerateStatefulSets(namespace, o.StatefulSets)
 		d.GeneratePods(namespace, o.Pods)
+		d.GenerateServices(namespace, o.Services, o.Endpoints)
 	}
 }
 
