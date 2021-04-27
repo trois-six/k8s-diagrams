@@ -13,19 +13,19 @@ import (
 )
 
 type Objects struct {
-	ConfigMaps             *corev1.ConfigMapList             `json:"configmaps"`
-	Endpoints              *corev1.EndpointsList             `json:"endpoints"`
-	Namespaces             *corev1.NamespaceList             `json:"namespaces"`
-	Pods                   *corev1.PodList                   `json:"pods"`
-	PersistentVolumes      *corev1.PersistentVolumeList      `json:"persistentvolumes"`
-	PersistentVolumeClaims *corev1.PersistentVolumeClaimList `json:"persistentvolumeclaims"`
-	Secrets                *corev1.SecretList                `json:"secrets"`
-	Services               *corev1.ServiceList               `json:"services"`
-	DaemonSets             *appsv1.DaemonSetList             `json:"daemonsets"`
-	Deployments            *appsv1.DeploymentList            `json:"deployments"`
-	ReplicaSets            *appsv1.ReplicaSetList            `json:"replicasets"`
-	StatefulSets           *appsv1.StatefulSetList           `json:"statefulsets"`
-	Ingresses              *networkingv1.IngressList         `json:"ingresses"`
+	ConfigMaps             *corev1.ConfigMapList
+	Endpoints              *corev1.EndpointsList
+	Namespaces             *corev1.NamespaceList
+	Pods                   *corev1.PodList
+	PersistentVolumes      *corev1.PersistentVolumeList
+	PersistentVolumeClaims *corev1.PersistentVolumeClaimList
+	Secrets                *corev1.SecretList
+	Services               *corev1.ServiceList
+	DaemonSets             *appsv1.DaemonSetList
+	Deployments            *appsv1.DeploymentList
+	ReplicaSets            *appsv1.ReplicaSetList
+	StatefulSets           *appsv1.StatefulSetList
+	Ingresses              *networkingv1.IngressList
 }
 
 type Discovery struct {
@@ -88,12 +88,12 @@ func (k *Discovery) generateCore(namespace string) error {
 
 	// k.objects.ConfigMaps = cm
 
-	// ep, err := k.client.CoreV1().Endpoints(namespace).List(k.ctx, metav1.ListOptions{})
-	// if err != nil {
-	// 	return fmt.Errorf("getting endpoints: %w", err)
-	// }
+	ep, err := k.client.CoreV1().Endpoints(namespace).List(k.ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("getting endpoints: %w", err)
+	}
 
-	// k.objects.Endpoints = ep
+	k.objects.Endpoints = ep
 
 	po, err := k.client.CoreV1().Pods(namespace).List(k.ctx, metav1.ListOptions{})
 	if err != nil {
@@ -120,12 +120,12 @@ func (k *Discovery) generateCore(namespace string) error {
 	// 	return err
 	// }
 
-	// svc, err := k.client.CoreV1().Services(namespace).List(k.ctx, metav1.ListOptions{})
-	// if err != nil {
-	// 	return fmt.Errorf("getting services: %w", err)
-	// }
+	svc, err := k.client.CoreV1().Services(namespace).List(k.ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("getting services: %w", err)
+	}
 
-	// k.objects.Services = svc
+	k.objects.Services = svc
 
 	return nil
 }

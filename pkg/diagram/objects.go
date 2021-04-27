@@ -25,7 +25,7 @@ func (d *Diagram) GenerateDeployments(namespace string, o *appsv1.DeploymentList
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
 			diagram.Width(nodeWidth),
 		)
-		d.namespaceGroups[namespace].Add(d.deployments[v.Name]).Connect(d.namespaces[namespace], d.deployments[v.Name])
+		d.namespaceGroups[namespace].Add(d.deployments[v.Name])
 	}
 }
 
@@ -47,7 +47,7 @@ func (d *Diagram) GenerateDaemonSets(namespace string, o *appsv1.DaemonSetList) 
 			o.BackgroundColor = setColor
 		}).Label("ds")
 		d.namespaceGroups[namespace].Group(d.daemonSetGroups[v.Name])
-		d.namespaceGroups[namespace].Add(d.daemonSets[v.Name]).Connect(d.namespaces[namespace], d.daemonSets[v.Name])
+		d.namespaceGroups[namespace].Add(d.daemonSets[v.Name])
 	}
 }
 
@@ -99,7 +99,7 @@ func (d *Diagram) GenerateStatefulSets(namespace string, o *appsv1.StatefulSetLi
 			o.BackgroundColor = setColor
 		}).Label("sts")
 		d.namespaceGroups[namespace].Group(d.statefulSetGroups[v.Name])
-		d.namespaceGroups[namespace].Add(d.statefulSets[v.Name]).Connect(d.namespaces[namespace], d.statefulSets[v.Name])
+		d.namespaceGroups[namespace].Add(d.statefulSets[v.Name])
 	}
 }
 
@@ -109,7 +109,7 @@ func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 			continue
 		}
 
-		pod := k8s.Compute.Pod(
+		d.pods[v.Name] = k8s.Compute.Pod(
 			diagram.NodeLabel(v.Name),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
 			diagram.Width(nodeWidth),
@@ -119,22 +119,76 @@ func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 			for _, o := range v.GetOwnerReferences() {
 				switch strings.ToLower(o.Kind) {
 				case "daemonset":
-					d.daemonSetGroups[o.Name].Add(pod)
-					d.namespaceGroups[namespace].Connect(d.daemonSets[o.Name], pod)
-					pod.Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
+					d.daemonSetGroups[o.Name].Add(d.pods[v.Name])
+					d.namespaceGroups[namespace].Connect(d.daemonSets[o.Name], d.pods[v.Name])
+					d.pods[v.Name].Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 				case "replicaset":
-					d.replicaSetGroups[o.Name].Add(pod)
-					d.namespaceGroups[namespace].Connect(d.replicaSets[o.Name], pod)
-					pod.Label(d.replicaSets[o.Name].Options.Label + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
+					d.replicaSetGroups[o.Name].Add(d.pods[v.Name])
+					d.namespaceGroups[namespace].Connect(d.replicaSets[o.Name], d.pods[v.Name])
+					d.pods[v.Name].Label(d.replicaSets[o.Name].Options.Label + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 				case "statefulset":
-					d.statefulSetGroups[o.Name].Add(pod)
-					d.namespaceGroups[namespace].Connect(d.statefulSets[o.Name], pod)
-					pod.Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
+					d.statefulSetGroups[o.Name].Add(d.pods[v.Name])
+					d.namespaceGroups[namespace].Connect(d.statefulSets[o.Name], d.pods[v.Name])
+					d.pods[v.Name].Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 				default:
 				}
 			}
 		} else {
-			d.namespaceGroups[namespace].Add(pod)
+			d.namespaceGroups[namespace].Add(d.pods[v.Name])
 		}
+	}
+}
+
+func (d *Diagram) GenerateServicePodsLinks(namespace string, service string, endpoints *corev1.EndpointsList) {
+	for _, ep := range endpoints.Items {
+		if ep.Namespace != namespace {
+			continue
+		}
+
+		if service != ep.Name {
+			continue
+		}
+
+		for _, subset := range ep.Subsets {
+			for _, address := range subset.Addresses {
+				if address.TargetRef == nil {
+					continue
+				}
+
+				if strings.ToLower(address.TargetRef.Kind) != "pod" {
+					continue
+				}
+
+				d.namespaceGroups[namespace].Connect(d.pods[address.TargetRef.Name], d.services[service], diagram.Reverse())
+			}
+		}
+	}
+}
+
+func (d *Diagram) GenerateServices(namespace string, services *corev1.ServiceList, endpoints *corev1.EndpointsList) {
+	for _, svc := range services.Items {
+		if svc.Namespace != namespace {
+			continue
+		}
+
+		d.services[svc.Name] = k8s.Network.Svc(
+			diagram.NodeLabel(svc.Name),
+			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
+			diagram.Width(nodeWidth),
+		)
+		d.namespaceGroups[namespace].Add(d.services[svc.Name])
+
+		d.GenerateServicePodsLinks(namespace, svc.Name, endpoints)
+
+		// for _, lb := range svc.Status.LoadBalancer.Ingress {
+		// 	var publicIPName string
+		// 	if lb.IP != "" {
+		// 		publicIPName = lb.IP
+		// 	} else if lb.Hostname != "" {
+		// 		publicIPName = lb.Hostname
+		// 	}
+
+		// 	fmt.Printf("svc: %s, public access: %#v\n", svc.Name, publicIPName)
+		// }
 	}
 }
