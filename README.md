@@ -1,5 +1,8 @@
 # Kubernetes diagrams
-k8s-diagrams creates diagrams from your kubernetes clusters. You just have to provide a namespace (or not), and it creates a jpg of your cluster.
+k8s-diagrams creates diagrams from your kubernetes clusters.
+You just have to provide a namespace (or not), and you get a picture from the current state of your cluster.
+For now it only suppports namespace, deployments, replicaSets, daemonSets, statefulSets and pods.
+I may add other k8s API objects in the future...
 
 ## How do I build it?
 ```sh
