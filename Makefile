@@ -6,7 +6,8 @@ VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 DOCKER_REGISTRY := gcr.io
 DOCKER_REPOSITORY := trois-six/k8s-diagrams
-OUTPUT_DIR := diagrams
+OUTPUT_DIR ?= diagrams
+NAMESPACE ?= traefikee
 
 default: clean build render
 
@@ -31,7 +32,7 @@ publish-latest:
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY):latest
 
 render: clean
-	@./k8s-diagrams -n traefikee
+	@./k8s-diagrams -n $(NAMESPACE) -d $(OUTPUT_DIR)
 	@cd $(OUTPUT_DIR) && dot -Tpng k8s.dot > ../diagram.png
 
 test: clean
