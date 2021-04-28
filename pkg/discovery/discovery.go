@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/go-version"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -13,6 +14,7 @@ import (
 )
 
 type Objects struct {
+	Version                *version.Version
 	ConfigMaps             *corev1.ConfigMapList
 	Endpoints              *corev1.EndpointsList
 	Namespaces             *corev1.NamespaceList
@@ -163,18 +165,50 @@ func (k *Discovery) generateApps(namespace string) error {
 }
 
 func (k *Discovery) generateNetworking(namespace string) error {
-	ing, err := k.client.NetworkingV1().Ingresses(namespace).List(k.ctx, metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("getting ingresses: %w", err)
-	}
+	ingressNetworkingVersion := version.Must(version.NewVersion("1.19"))
+	if k.objects.Version.GreaterThanOrEqual(ingressNetworkingVersion) {
+		ing, err := k.client.NetworkingV1().Ingresses(namespace).List(k.ctx, metav1.ListOptions{})
+		if err != nil {
+			return fmt.Errorf("getting ingresses: %w", err)
+		}
 
-	k.objects.Ingresses = ing
+		k.objects.Ingresses = ing
+	} else {
+		ingresses, err := k.client.NetworkingV1beta1().Ingresses(namespace).List(k.ctx, metav1.ListOptions{})
+		if err != nil {
+			return fmt.Errorf("getting ingresses: %w", err)
+		}
+
+		ing := &networkingv1.IngressList{}
+		for _, ingress := range ingresses.Items {
+			n, err := toNetworkingV1(ingress)
+			if err != nil {
+				return fmt.Errorf("converting ingress from v1beta1 to v1: %w", err)
+			}
+
+			addServiceFromV1Beta1(n, ingress)
+
+			ing.Items = append(ing.Items, *n)
+		}
+
+		k.objects.Ingresses = ing
+	}
 
 	return nil
 }
 
 // GenerateAll gets all kubernetes objects.
 func (k *Discovery) GenerateAll(namespace string) (*Objects, error) {
+	serverVersion, err := k.client.Discovery().ServerVersion()
+	if err != nil {
+		return nil, fmt.Errorf("getting server version: %w", err)
+	}
+
+	k.objects.Version, err = version.NewVersion(serverVersion.GitVersion)
+	if err != nil {
+		return nil, fmt.Errorf("getting server version from Git version: %w", err)
+	}
+
 	if err := k.generateCore(namespace); err != nil {
 		return nil, err
 	}
