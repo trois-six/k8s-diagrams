@@ -29,3 +29,6 @@
   [[issues.exclude-rules]]
     path = "objects.go"
     text = "lines are duplicate of"
+  [[issues.exclude-rules]]
+    path = "objects.go"
+    text = "calculated cyclomatic complexity for function GenerateIngresses is"

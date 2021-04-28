@@ -85,6 +85,10 @@ func (d *Diagram) GenerateReplicaSets(namespace string, o *appsv1.ReplicaSetList
 				continue
 			}
 
+			if _, ok := d.deployments[o.Name]; !ok {
+				continue
+			}
+
 			d.namespaceGroups[namespace].Connect(d.deployments[o.Name], d.replicaSets[v.Name])
 			d.replicaSets[v.Name].Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 		}
@@ -115,6 +119,39 @@ func (d *Diagram) GenerateStatefulSets(namespace string, o *appsv1.StatefulSetLi
 	}
 }
 
+func (d *Diagram) AddPodInDaemonSet(namespace, daemonSetName, podName string) {
+	if _, ok := d.daemonSetGroups[daemonSetName]; !ok {
+		return
+	}
+
+	log.Debug().Msgf("Adding pod: %s to daemonSetGroups: %s", podName, daemonSetName)
+	d.daemonSetGroups[daemonSetName].Add(d.pods[podName])
+	d.namespaceGroups[namespace].Connect(d.daemonSets[daemonSetName], d.pods[podName])
+	d.pods[podName].Label(daemonSetName + "-\\n" + strings.TrimPrefix(podName, daemonSetName+"-"))
+}
+
+func (d *Diagram) AddPodInReplicaSet(namespace, replicaSetName, podName string) {
+	if _, ok := d.replicaSetGroups[replicaSetName]; !ok {
+		return
+	}
+
+	log.Debug().Msgf("Adding pod: %s to replicaSetGroups: %s", podName, replicaSetName)
+	d.replicaSetGroups[replicaSetName].Add(d.pods[podName])
+	d.namespaceGroups[namespace].Connect(d.replicaSets[replicaSetName], d.pods[podName])
+	d.pods[podName].Label(replicaSetName + "-\\n" + strings.TrimPrefix(podName, replicaSetName+"-"))
+}
+
+func (d *Diagram) AddPodInStatefulSet(namespace, statefulSetName, podName string) {
+	if _, ok := d.statefulSetGroups[statefulSetName]; !ok {
+		return
+	}
+
+	log.Debug().Msgf("Adding pod: %s to statefulSetGroups: %s", podName, statefulSetName)
+	d.statefulSetGroups[statefulSetName].Add(d.pods[podName])
+	d.namespaceGroups[namespace].Connect(d.statefulSets[statefulSetName], d.pods[podName])
+	d.pods[podName].Label(statefulSetName + "-\\n" + strings.TrimPrefix(podName, statefulSetName+"-"))
+}
+
 func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 	for _, v := range o.Items {
 		if v.Namespace != namespace {
@@ -133,20 +170,11 @@ func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 			for _, o := range v.GetOwnerReferences() {
 				switch strings.ToLower(o.Kind) {
 				case "daemonset":
-					log.Debug().Msgf("Adding pod: %s to daemonSetGroups: %s", v.Name, o.Name)
-					d.daemonSetGroups[o.Name].Add(d.pods[v.Name])
-					d.namespaceGroups[namespace].Connect(d.daemonSets[o.Name], d.pods[v.Name])
-					d.pods[v.Name].Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
+					d.AddPodInDaemonSet(namespace, o.Name, v.Name)
 				case "replicaset":
-					log.Debug().Msgf("Adding pod: %s to replicaSetGroup: %s", v.Name, o.Name)
-					d.replicaSetGroups[o.Name].Add(d.pods[v.Name])
-					d.namespaceGroups[namespace].Connect(d.replicaSets[o.Name], d.pods[v.Name])
-					d.pods[v.Name].Label(d.replicaSets[o.Name].Options.Label + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
+					d.AddPodInReplicaSet(namespace, o.Name, v.Name)
 				case "statefulset":
-					log.Debug().Msgf("Adding pod: %s to statefulSetGroups: %s", v.Name, o.Name)
-					d.statefulSetGroups[o.Name].Add(d.pods[v.Name])
-					d.namespaceGroups[namespace].Connect(d.statefulSets[o.Name], d.pods[v.Name])
-					d.pods[v.Name].Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
+					d.AddPodInStatefulSet(namespace, o.Name, v.Name)
 				default:
 				}
 			}
@@ -173,6 +201,10 @@ func (d *Diagram) GenerateLinksFromServiceToPods(namespace string, service strin
 				}
 
 				if strings.ToLower(address.TargetRef.Kind) != "pod" {
+					continue
+				}
+
+				if _, ok := d.pods[address.TargetRef.Name]; !ok {
 					continue
 				}
 
@@ -250,6 +282,10 @@ func (d *Diagram) GenerateIngresses(namespace string, o *networkingv1.IngressLis
 			}
 
 			for _, path := range rule.HTTP.Paths {
+				if _, ok := d.services[path.Backend.Service.Name]; !ok {
+					continue
+				}
+
 				d.namespaceGroups[namespace].Connect(d.ingresses[ing.Name], d.services[path.Backend.Service.Name])
 			}
 		}
