@@ -7,6 +7,7 @@ import (
 	"github.com/blushft/go-diagrams/diagram"
 	"github.com/blushft/go-diagrams/nodes/apps"
 	"github.com/blushft/go-diagrams/nodes/k8s"
+	"github.com/rs/zerolog/log"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -23,6 +24,8 @@ func (d *Diagram) GenerateDeployments(namespace string, o *appsv1.DeploymentList
 			continue
 		}
 
+		log.Debug().Msgf("Generating deployment: %s", v.Name)
+
 		d.deployments[v.Name] = k8s.Compute.Deploy(
 			diagram.NodeLabel(v.Name),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
@@ -37,6 +40,8 @@ func (d *Diagram) GenerateDaemonSets(namespace string, o *appsv1.DaemonSetList) 
 		if v.Namespace != namespace || v.Status.CurrentNumberScheduled == 0 {
 			continue
 		}
+
+		log.Debug().Msgf("Generating daemonSet: %s", v.Name)
 
 		d.daemonSets[v.Name] = k8s.Compute.Ds(
 			diagram.NodeLabel(v.Name),
@@ -59,6 +64,8 @@ func (d *Diagram) GenerateReplicaSets(namespace string, o *appsv1.ReplicaSetList
 		if v.Namespace != namespace || v.Status.Replicas == 0 {
 			continue
 		}
+
+		log.Debug().Msgf("Generating replicaSet: %s", v.Name)
 
 		d.replicaSets[v.Name] = k8s.Compute.Rs(
 			diagram.NodeLabel(v.Name),
@@ -90,6 +97,8 @@ func (d *Diagram) GenerateStatefulSets(namespace string, o *appsv1.StatefulSetLi
 			continue
 		}
 
+		log.Debug().Msgf("Generating statefulSet: %s", v.Name)
+
 		d.statefulSets[v.Name] = k8s.Compute.Sts(
 			diagram.NodeLabel(v.Name),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
@@ -112,6 +121,8 @@ func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 			continue
 		}
 
+		log.Debug().Msgf("Generating pod: %s", v.Name)
+
 		d.pods[v.Name] = k8s.Compute.Pod(
 			diagram.NodeLabel(v.Name),
 			diagram.SetFontOptions(diagram.Font{Size: nodeFontSize}),
@@ -122,14 +133,17 @@ func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
 			for _, o := range v.GetOwnerReferences() {
 				switch strings.ToLower(o.Kind) {
 				case "daemonset":
+					log.Debug().Msgf("Adding pod: %s to daemonSetGroups: %s", v.Name, o.Name)
 					d.daemonSetGroups[o.Name].Add(d.pods[v.Name])
 					d.namespaceGroups[namespace].Connect(d.daemonSets[o.Name], d.pods[v.Name])
 					d.pods[v.Name].Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 				case "replicaset":
+					log.Debug().Msgf("Adding pod: %s to replicaSetGroup: %s", v.Name, o.Name)
 					d.replicaSetGroups[o.Name].Add(d.pods[v.Name])
 					d.namespaceGroups[namespace].Connect(d.replicaSets[o.Name], d.pods[v.Name])
 					d.pods[v.Name].Label(d.replicaSets[o.Name].Options.Label + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
 				case "statefulset":
+					log.Debug().Msgf("Adding pod: %s to statefulSetGroups: %s", v.Name, o.Name)
 					d.statefulSetGroups[o.Name].Add(d.pods[v.Name])
 					d.namespaceGroups[namespace].Connect(d.statefulSets[o.Name], d.pods[v.Name])
 					d.pods[v.Name].Label(o.Name + "-\\n" + strings.TrimPrefix(v.Name, o.Name+"-"))
@@ -173,6 +187,8 @@ func (d *Diagram) GenerateServices(namespace string, services *corev1.ServiceLis
 		if svc.Namespace != namespace {
 			continue
 		}
+
+		log.Debug().Msgf("Generating service: %s", svc.Name)
 
 		d.services[svc.Name] = k8s.Network.Svc(
 			diagram.NodeLabel(svc.Name),
@@ -218,6 +234,8 @@ func (d *Diagram) GenerateIngresses(namespace string, o *networkingv1.IngressLis
 		if ing.Namespace != namespace {
 			continue
 		}
+
+		log.Debug().Msgf("Generating ingress: %s", ing.Name)
 
 		d.ingresses[ing.Name] = k8s.Network.Ing(
 			diagram.NodeLabel(ing.Name),
