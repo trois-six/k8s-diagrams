@@ -11,6 +11,8 @@ builds:
     - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
   goos:
     - linux
+    - darwin
+    - windows
   goarch:
     - amd64
   binary: '{{ .ProjectName }}_v{{ .Version }}'
