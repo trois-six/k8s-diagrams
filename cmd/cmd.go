@@ -12,6 +12,18 @@ import (
 	"github.com/Trois-Six/k8s-diagrams/pkg/discovery"
 	"github.com/Trois-Six/k8s-diagrams/pkg/logger"
 	"github.com/urfave/cli/v2"
+
+	// Blank import to allow client-go to connect on azure.
+	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
+
+	// Blank import to allow client-go to connect on gcp.
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+
+	// Blank import to allow client-go to connect on oidc.
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
+
+	// Blank import to allow client-go to connect on openstack.
+	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
