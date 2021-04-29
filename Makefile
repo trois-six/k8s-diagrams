@@ -35,5 +35,8 @@ render: clean
 	@./k8s-diagrams -n $(NAMESPACE) -d $(OUTPUT_DIR)
 	@cd $(OUTPUT_DIR) && dot -Tpng k8s.dot > ../diagram.png
 
+display:
+	@feh diagram.png
+
 test: clean
 	go test -v -cover ./...
