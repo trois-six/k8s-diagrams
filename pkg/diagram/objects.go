@@ -241,7 +241,7 @@ func (d *Diagram) GenerateServices(namespace string, services *corev1.ServiceLis
 					d.internet,
 					d.services[svc.Name],
 					func(o *diagram.EdgeOptions) {
-						o.Attributes["xlabel"] = lb.IP
+						o.Attributes["xlabel"] = "\"" + lb.IP + "\""
 						o.Attributes["labelfloat"] = strconv.FormatBool(true)
 						o.Font.Size = 6
 					},
@@ -300,7 +300,7 @@ func (d *Diagram) GenerateIngresses(namespace string, o *networkingv1.IngressLis
 					d.internet,
 					d.ingresses[ing.Name],
 					func(o *diagram.EdgeOptions) {
-						o.Attributes["xlabel"] = lb.IP
+						o.Attributes["xlabel"] = "\"" + lb.IP + "\""
 						o.Attributes["labelfloat"] = strconv.FormatBool(true)
 						o.Font.Size = 6
 					},
