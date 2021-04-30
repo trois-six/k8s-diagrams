@@ -36,5 +36,11 @@ $ dot -Tpng k8s.dot > k8s.png
 ```
 
 ## Render example
+
+### Small namespace
+
 ![Diagram](diagram.png)
+
+### Big namespace
+
 ![Big diagram](big_diagram.png)
