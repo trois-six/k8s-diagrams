@@ -37,3 +37,4 @@ $ dot -Tpng k8s.dot > k8s.png
 
 ## Render example
 ![Diagram](diagram.png)
+![Big diagram](big_diagram.png)
