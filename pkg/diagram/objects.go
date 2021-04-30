@@ -127,7 +127,9 @@ func (d *Diagram) AddPodInDaemonSet(namespace, daemonSetName, podName string) {
 	log.Debug().Msgf("Adding pod: %s to daemonSetGroups: %s", podName, daemonSetName)
 	d.daemonSetGroups[daemonSetName].Add(d.pods[podName])
 	d.namespaceGroups[namespace].Connect(d.daemonSets[daemonSetName], d.pods[podName])
-	d.pods[podName].Label(daemonSetName + "-\\n" + strings.TrimPrefix(podName, daemonSetName+"-"))
+	d.pods[podName].Label(
+		d.daemonSets[daemonSetName].Options.Label + "-\\n" + strings.TrimPrefix(podName, daemonSetName+"-"),
+	)
 }
 
 func (d *Diagram) AddPodInReplicaSet(namespace, replicaSetName, podName string) {
@@ -138,7 +140,9 @@ func (d *Diagram) AddPodInReplicaSet(namespace, replicaSetName, podName string) 
 	log.Debug().Msgf("Adding pod: %s to replicaSetGroups: %s", podName, replicaSetName)
 	d.replicaSetGroups[replicaSetName].Add(d.pods[podName])
 	d.namespaceGroups[namespace].Connect(d.replicaSets[replicaSetName], d.pods[podName])
-	d.pods[podName].Label(replicaSetName + "-\\n" + strings.TrimPrefix(podName, replicaSetName+"-"))
+	d.pods[podName].Label(
+		d.replicaSets[replicaSetName].Options.Label + "-\\n" + strings.TrimPrefix(podName, replicaSetName+"-"),
+	)
 }
 
 func (d *Diagram) AddPodInStatefulSet(namespace, statefulSetName, podName string) {
@@ -149,7 +153,9 @@ func (d *Diagram) AddPodInStatefulSet(namespace, statefulSetName, podName string
 	log.Debug().Msgf("Adding pod: %s to statefulSetGroups: %s", podName, statefulSetName)
 	d.statefulSetGroups[statefulSetName].Add(d.pods[podName])
 	d.namespaceGroups[namespace].Connect(d.statefulSets[statefulSetName], d.pods[podName])
-	d.pods[podName].Label(statefulSetName + "-\\n" + strings.TrimPrefix(podName, statefulSetName+"-"))
+	d.pods[podName].Label(
+		d.statefulSets[statefulSetName].Options.Label + "-\\n" + strings.TrimPrefix(podName, statefulSetName+"-"),
+	)
 }
 
 func (d *Diagram) GeneratePods(namespace string, o *corev1.PodList) {
