@@ -1,10 +1,12 @@
-FROM golang
+FROM golang AS build
 
-RUN mkdir /diagram
- 
-COPY . /diagram
 WORKDIR /diagram
+COPY . ./
+RUN make build
 
-RUN make build 
-ENTRYPOINT ["/diagram/k8s-diagrams"]
+FROM alpine
 
+WORKDIR /
+COPY --from=build /diagram/k8s-diagrams /usr/local/bin/k8s-diagrams
+USER nonroot:nonroot
+ENTRYPOINT ["/usr/local/bin/k8s-diagrams"]
