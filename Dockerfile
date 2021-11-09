@@ -1,6 +1,12 @@
+FROM golang AS build
+
+WORKDIR /diagram
+COPY . ./
+RUN make build
+
 FROM alpine
 
-COPY k8s-diagrams /usr/local/bin/k8s-diagrams
-
+WORKDIR /
+COPY --from=build /diagram/k8s-diagrams /usr/local/bin/k8s-diagrams
+USER nobody:nobody
 ENTRYPOINT ["/usr/local/bin/k8s-diagrams"]
-
