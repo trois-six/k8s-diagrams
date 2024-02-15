@@ -3,7 +3,7 @@ package diagram
 import (
 	"fmt"
 
-	"github.com/Trois-Six/k8s-diagrams/pkg/discovery"
+	"github.com/trois-six/k8s-diagrams/pkg/discovery"
 	"github.com/blushft/go-diagrams/diagram"
 )
 

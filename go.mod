@@ -1,4 +1,4 @@
-module github.com/Trois-Six/k8s-diagrams
+module github.com/trois-six/k8s-diagrams
 
 go 1.15
 

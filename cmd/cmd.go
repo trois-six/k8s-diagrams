@@ -8,9 +8,9 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/Trois-Six/k8s-diagrams/pkg/diagram"
-	"github.com/Trois-Six/k8s-diagrams/pkg/discovery"
-	"github.com/Trois-Six/k8s-diagrams/pkg/logger"
+	"github.com/trois-six/k8s-diagrams/pkg/diagram"
+	"github.com/trois-six/k8s-diagrams/pkg/discovery"
+	"github.com/trois-six/k8s-diagrams/pkg/logger"
 	"github.com/urfave/cli/v2"
 
 	// Blank import to allow client-go to connect on azure.

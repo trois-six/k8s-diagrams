@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/Trois-Six/k8s-diagrams/cmd"
+	"github.com/trois-six/k8s-diagrams/cmd"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 )
