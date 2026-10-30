@@ -1,0 +1,55 @@
+version: "2"
+
+linters:
+  default: all
+  disable:
+    - depguard # No restricted dependencies.
+    - exhaustruct # Kubernetes structs are huge, and their zero values are meaningful.
+    - exhaustruct_v5
+    - gochecknoglobals # The version is set at build time.
+    - gomodguard # Deprecated, replaced by gomodguard_v2.
+    - nlreturn
+    - noinlineerr # Inline error handling is idiomatic.
+    - paralleltest
+    - testpackage # The tests use unexported helpers.
+    - varnamelen
+    - wsl # Deprecated, replaced by wsl_v5.
+  settings:
+    cyclop:
+      max-complexity: 15
+    gocyclo:
+      min-complexity: 15
+    govet:
+      enable:
+        - shadow
+    misspell:
+      locale: US
+    wrapcheck:
+      ignore-sigs:
+        - .Errorf(
+        - errors.New(
+        - .Wait() error
+        - (*github.com/urfave/cli/v3.Command).Run(
+      ignore-package-globs:
+        - github.com/trois-six/k8s-diagrams/*
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      - path: _test\.go
+        linters:
+          - funlen
+          - goconst
+          - gosec # The tests read the files they write.
+          - maintidx
+
+formatters:
+  enable:
+    - gci
+    - gofumpt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule

@@ -1,23 +1,26 @@
 name: test
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
-  build:
-    name: Build
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.15
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-    - name: Build
-      run: go build -v .
-    - name: Test
-      run: go test -v $(go list ./... | grep -v /sdk$) -timeout=30s
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Install graphviz
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+      - name: Build
+        run: go build -v .
+      - name: Test
+        run: go test -race -cover ./...

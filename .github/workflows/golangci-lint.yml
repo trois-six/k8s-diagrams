@@ -1,17 +1,21 @@
 name: golangci-lint
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+permissions:
+  contents: read
 jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          version: v1.39
+          go-version-file: go.mod
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.15
